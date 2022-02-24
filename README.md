@@ -1,6 +1,6 @@
-# Fleet Optimizer with Graviton
+# AWS EC2 Compute Fleet Optimizer
 
-In this workshop you'll learn how to launch the Fleet Optimizer with Graviton tool in your AWS environment.
+In this guide we'll go over the steps to launch the optimizer tool in your AWS environment. In its current capability, the tool is mainly focused on utilizing Amazon's Graviton based EC2 instances as one of the ways to try and optimize EC2 compute usage on AWS. Down the road, we plan to add more ways to save cost for AWS customers running fleets of EC2. 
 
 ## Pre-requisites
 
