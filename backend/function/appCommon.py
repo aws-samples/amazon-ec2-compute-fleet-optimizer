@@ -19,7 +19,7 @@
 
 import boto3
 
-
+#initialize s3 client 
 s3 = boto3.client("s3")
 
 burstableBaselineUtil = {

@@ -96,5 +96,4 @@ class ComputeFleetOptimizerHdlr():
                 "body": json.dumps({"error": repr(e)})
             }
 
-
 handler = ComputeFleetOptimizerHdlr()
