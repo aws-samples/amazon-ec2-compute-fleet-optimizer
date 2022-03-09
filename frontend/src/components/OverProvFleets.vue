@@ -175,7 +175,7 @@ export default {
         console.log('File upload to S3 Result: ', result);
         // Final URL for the user doesn't need the query string params
         this.uploadURL = response.data.uploadURL.split('?')[0];
-        this.s3ObjectKey = response.data.photoFilename;
+        this.s3ObjectKey = response.data.objectKey;
         // handle success
         this.postData();
       } catch (err) {

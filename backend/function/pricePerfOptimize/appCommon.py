@@ -19,7 +19,7 @@
 
 import boto3
 
-#initialize s3 client 
+
 s3 = boto3.client("s3")
 
 burstableBaselineUtil = {
@@ -44,9 +44,11 @@ overProvInstanceArn_FN = "overProvInstanceArn"
 overProvInstanceName_FN = "overProvInstanceName"
 overProvInstanceType_FN = "overProvInstanceType"
 overProvInstanceCount_FN = "overProvInstanceCount"
+memUtilReportingInstCnt_FN = "memUtilReportingInstCnt"
 maxCpuUtilCriteria_FN = "maxCpuUtilCriteria"
 maxMemUtilCriteria_FN = "maxMemUtilCriteria"
 perfGainedGrav2Criteria_FN = "perfGainedGrav2Criteria"
+hasGravitonPerfGainCriteria_FN = "hasGravitonPerfGainCriteria"
 isMaximizeCpuUtilCrit_FN = "isMaximizeCpuUtilCrit"
 isMaximizeMemUtilCrit_FN = "isMaximizeMemUtilCrit"
 instanceTypeTxt = "_instanceType"
@@ -56,6 +58,8 @@ currentVcpus_FN = "current_vcpus"
 totalVcpus_FN = "total_vcpus"
 currentMem_FN = "current_memory"
 avgFleetVCpuUtil_FN = "avgFleetVCpuUtil"
+avgFleetMemUtil_FN = "avgFleetMemUtil"
+hasAvgFleetMemUtil_FN = "hasAvgFleetMemUtil"
 totalFleetInstCnt_FN = "totalFleetInstCnt"
 totalVCpuUtil_FN = "totalVCpuUtil"
 totalInstCnt_FN = "totalInstCnt"
@@ -67,7 +71,10 @@ memUtilization_FN = "memUtilization"
 cpuUtilization_FN = "cpuUtilization"
 currOnDemandPrice_FN = "current_onDemandPrice"
 onDemandPriceTxt = "_onDemandPrice"
+hasCpuUtilMaximizeReducedCpu_FN = "hasCpuUtilMaxReducedCpuCnt"
+
 totalMem_FN = "total_mem"
+totalMemUtil_FN = "totalMemUtil"
 perfRiskTxt = "_performanceRisk"
 vcpuUtil_FN = "vcpuUtil"
 recoInstanceType_FN = "recoInstanceType"
@@ -89,6 +96,7 @@ recommendationsCnt_FN = "recommendations_count"
 isCpuUtilWithin5Percent_FN = "isCpuUtilWithin5Percent"
 notApplicableTxt = "NA"
 tag_FN = "tag"
+fleetInstanceType_FN = "fleetInstanceType"
 finding_FN = "finding"
 recommendations_FN = "recos"
 

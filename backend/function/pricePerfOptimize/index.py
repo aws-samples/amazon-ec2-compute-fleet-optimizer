@@ -28,8 +28,9 @@ logger = logging.getLogger()
 LOGLEVEL = os.environ.get('LOGLEVEL', 'WARN').upper()
 logger.setLevel(LOGLEVEL)
 
-s3BucketEnvVarName = os.environ['S3_BUCKET_ENV_VAR_NAME']
-s3Bucket = os.environ[s3BucketEnvVarName]
+s3BucketEnvVar = os.environ['COMPUTEOPTIMIZER_CSV_REPORT_BUCKET']
+s3Bucket = os.environ[s3BucketEnvVar]
+
 
 class ComputeFleetOptimizerHdlr():
 
@@ -55,17 +56,19 @@ class ComputeFleetOptimizerHdlr():
             requestType = evtBody["requestType"]
 
             if requestType == "aggregateFleetLevelStats":
-                aggregator = FleetStatsAggregator(s3Bucket, s3Key, metricType)
-                response = aggregator.augmentFleetAggrStatsToCOReport()
+                response = FleetStatsAggregator(s3Bucket, s3Key, metricType).aggrFleetData
             elif requestType == "optimizeComputeFleet":
                 optimizer = OverProvInstanceOptimizer(s3Bucket, s3Key, metricType,
-                                                      evtBody[appCommon.overProvInstanceArn_FN],
-                                                      int(evtBody[appCommon.overProvInstanceCount_FN]),
-                                                      float(evtBody[appCommon.maxCpuUtilCriteria_FN]),
-                                                      float(evtBody[appCommon.maxMemUtilCriteria_FN]),
+                                                      evtBody[appCommon.tag_FN],
+                                                      evtBody[appCommon.fleetInstanceType_FN],
+                                                      evtBody[appCommon.hasGravitonPerfGainCriteria_FN],
                                                       float(evtBody[appCommon.perfGainedGrav2Criteria_FN]),
                                                       evtBody[appCommon.isMaximizeCpuUtilCrit_FN],
-                                                      evtBody[appCommon.isMaximizeMemUtilCrit_FN])
+                                                      float(evtBody[appCommon.maxCpuUtilCriteria_FN]),
+                                                      evtBody[appCommon.isMaximizeMemUtilCrit_FN],
+                                                      float(evtBody[appCommon.maxMemUtilCriteria_FN])
+                                                      )
+
                 response = optimizer.optimizeComputeForSavings()
             else:
                 raise Exception("Invalid requestType parameter provided!")
@@ -95,5 +98,6 @@ class ComputeFleetOptimizerHdlr():
                 },
                 "body": json.dumps({"error": repr(e)})
             }
+
 
 handler = ComputeFleetOptimizerHdlr()

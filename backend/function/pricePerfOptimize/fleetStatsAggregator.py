@@ -31,6 +31,68 @@ class FleetStatsAggregator():
         self.s3Bucket = s3Bucket
         self.s3Key = s3Key
         self.metricType = metricType
+        self.aggrFleetData = {}
+        self.records = []
+
+        self.init()
+
+    def init(self):
+        logger.debug("in FleetStatsAggregator init")
+
+        self.aggrFleetData = {}
+
+        # Read csv from S3
+        s3_data = appCommon.s3.get_object(Bucket=self.s3Bucket, Key=self.s3Key)
+
+        self.records = []
+
+        for record in csv.DictReader(codecs.getreader("utf-8")(s3_data["Body"])):
+            self.records.append(record)
+            overProvInstance = appCommon.OverProvInstance(
+                record, self.metricType)
+
+            # if overProvInstance.finding == "OVER_PROVISIONED":
+            FleetStatsAggregator.aggregateFleetStatsForInstance(
+                overProvInstance,
+                self.aggrFleetData
+            )
+
+        # for each fleet+instanceType entry in aggregate data, append additional fleet level info
+
+        for tag in self.aggrFleetData:
+            utilByInstType = self.aggrFleetData[tag]
+
+            for instanceType in utilByInstType:
+                utilData = utilByInstType.get(instanceType)
+
+                totalInstCntForInstType = utilData.get(appCommon.totalInstCnt_FN)
+
+                utilData[appCommon.totalFleetInstCnt_FN] = totalInstCntForInstType
+
+                avgVCpuUtil = utilData.get(appCommon.totalVCpuUtil_FN) / totalInstCntForInstType
+
+                utilData[appCommon.avgFleetVCpuUtil_FN] = avgVCpuUtil
+
+                memUtilReportingInstCnt = utilData.get(appCommon.memUtilReportingInstCnt_FN)
+
+                if (memUtilReportingInstCnt == None or memUtilReportingInstCnt != totalInstCntForInstType):
+                    utilData[appCommon.hasAvgFleetMemUtil_FN] = False
+                    utilData[appCommon.avgFleetMemUtil_FN] = 'not available'
+                else:
+                    utilData[appCommon.hasAvgFleetMemUtil_FN] = True
+
+                    avgMemUtil = utilData.get(appCommon.totalMemUtil_FN) / totalInstCntForInstType
+
+                    utilData[appCommon.avgFleetMemUtil_FN] = avgMemUtil
+
+    def getAggregatedFleetData(self):
+        logger.debug("in getAggregatedFleetData")
+
+        return self.aggrFleetData
+
+    def getCsvRecords(self):
+        logger.debug("in getCSVRecords")
+        return self.records
 
     @staticmethod
     def aggregateFleetStatsForInstance(
@@ -77,54 +139,18 @@ class FleetStatsAggregator():
                 overProvInstance.cpuUtil) if totalFleetVCpuUtil == None else totalFleetVCpuUtil + float(
                 overProvInstance.cpuUtil)
 
+            if (overProvInstance.memUtil != None and overProvInstance.memUtil != ""):
+                totalFleetMemUtil = dataByInstanceType.get(
+                    appCommon.totalMemUtil_FN)
+
+                dataByInstanceType[appCommon.totalMemUtil_FN] = float(
+                    overProvInstance.memUtil) if totalFleetMemUtil == None else totalFleetMemUtil + float(
+                    overProvInstance.memUtil)
+
+                memUtilReportingInstCnt = dataByInstanceType.get(
+                    appCommon.memUtilReportingInstCnt_FN)
+
+                dataByInstanceType[appCommon.memUtilReportingInstCnt_FN] = 1 \
+                    if memUtilReportingInstCnt == None else memUtilReportingInstCnt + 1
+
         return data
-
-    def augmentFleetAggrStatsToCOReport(self):
-        aggrFleetData = {}
-
-        # Read csv from S3
-        s3_data = appCommon.s3.get_object(Bucket=self.s3Bucket, Key=self.s3Key)
-
-        overProvInstancesWithAggrData = []
-
-        for record in csv.DictReader(codecs.getreader("utf-8")(s3_data["Body"])):
-
-            overProvInstance = appCommon.OverProvInstance(
-                record, self.metricType)
-
-            if overProvInstance.finding == "OVER_PROVISIONED":
-                overProvInstancesWithAggrData.append(
-                    FleetStatsAggregator.aggregateFleetStatsForInstance(
-                        overProvInstance,
-                        aggrFleetData
-                    )
-                )
-
-        # for each row in overProvInstLst, append the total fleet size corresponding to that instance's fleet membership
-        # by matching instance name and also append the average cpu util for that fleet
-        for overProvInstanceWithAggr in overProvInstancesWithAggrData:
-            overProvInstType = overProvInstanceWithAggr[appCommon.overProvInstanceType_FN]
-            tag = overProvInstanceWithAggr.get(appCommon.tag_FN)
-            if tag == None or tag == "":
-                logger.debug("skipping record for instance %s, since its tag is not set",
-                             overProvInstanceWithAggr[appCommon.overProvInstanceArn_FN])
-                overProvInstanceWithAggr[appCommon.tag_FN] = ""
-                overProvInstanceWithAggr[appCommon.avgFleetVCpuUtil_FN] = appCommon.notAvailTxt
-                overProvInstanceWithAggr[appCommon.totalFleetInstCnt_FN] = appCommon.notAvailTxt
-            else:
-                utilByInstType = aggrFleetData.get(tag)
-                utilData = utilByInstType.get(overProvInstType)
-                avgVCpuUtil = utilData.get(
-                    appCommon.totalVCpuUtil_FN) / utilData.get(appCommon.totalInstCnt_FN)
-
-                overProvInstanceWithAggr[appCommon.avgFleetVCpuUtil_FN] = "{:.2f}".format(
-                    avgVCpuUtil) + " %"
-                overProvInstanceWithAggr[appCommon.totalFleetInstCnt_FN] = utilData.get(
-                    appCommon.totalInstCnt_FN)
-
-                # check if the avg is within + or - 5% when compared to this particular instances
-                overProvInstanceWithAggr[appCommon.isCpuUtilWithin5Percent_FN] = True \
-                    if abs(overProvInstanceWithAggr[appCommon.cpuUtilizationNumeric_FN] - avgVCpuUtil) \
-                    <= appCommon.cpu_util_delta_with_fleet_avg else False
-
-        return overProvInstancesWithAggrData
