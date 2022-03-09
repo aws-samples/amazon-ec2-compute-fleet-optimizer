@@ -49,7 +49,8 @@ Amplify.configure(config);
 Vue.use(Vuetify, VueRouter, BootstrapVue, Vuetify);
 Vue.config.productionTip = false;
 
-Vue.prototype.$apiPath = '/price-performance-optimize';
+Vue.prototype.$pricePerfOptimizeApiPath = '/price-performance-optimize';
+Vue.prototype.$getUploadUrlApiPath = '/get-upload-url';
 
 // new Vue({
 //   router,

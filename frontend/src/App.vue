@@ -162,6 +162,10 @@ tr:hover {
   font-weight: bold;
   font-size: 20px;
 }
+.h3prompt {
+  font-weight: bold;
+  font-size: 16px;
+}
 .form-wrapper {
   width: 30vw;
   height: 60vh;
@@ -172,5 +176,11 @@ tr:hover {
   font-family: 'fairplex-wide';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+.helptext {
+  font-size: small;
+}
+.input[type='checkbox'].checkbox_1 {
+  display: none;
 }
 </style>

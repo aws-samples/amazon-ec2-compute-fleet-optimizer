@@ -87,6 +87,7 @@ const store = new Vuex.Store({
 
         state.computeOptReport.s3Bucket = loc.s3Bucket;
         state.computeOptReport.s3ObjKey = loc.s3ObjKey;
+        state.computeOptReport.image = loc.image;
       }
     },
     setOverProvEc2(state, seln) {
@@ -99,6 +100,10 @@ const store = new Vuex.Store({
         state.overProvEc2.instanceTotalFleetInstCnt =
           seln.selectedInstanceTotalFleetInstCnt;
         state.overProvEc2.fleetId = seln.fleetId;
+        state.overProvEc2.instanceHasMemUtilMetric =
+          seln.selectedHasMemUtilMetric;
+        state.overProvEc2.instanceCpuUtil = seln.selectedInstanceCpuUtil;
+        state.overProvEc2.instanceMemUtil = seln.selectedInstanceMemUtil;
       }
     },
     setOverProvFleet(state, fleetData) {
@@ -106,7 +111,10 @@ const store = new Vuex.Store({
         state.overProvFleet = {};
 
         state.overProvFleet.fleetId = fleetData.fleetId;
-        state.overProvFleet.instances = fleetData.fleetInstances;
+        state.overProvFleet.fleetInstanceType = fleetData.fleetInstanceType;
+        state.overProvFleet.fleetAvgCpuUtil = fleetData.fleetAvgCpuUtil;
+        state.overProvFleet.hasAvgFleetMemUtil = fleetData.hasAvgFleetMemUtil;
+        state.overProvFleet.fleetAvgMemUtil = fleetData.fleetAvgMemUtil;
       }
     },
     setOptimizeCriteria(state, criteria) {
@@ -117,6 +125,8 @@ const store = new Vuex.Store({
         state.optimizeCrit.maxMemUtilCriteria = criteria.maxMemUtilCriteria;
         state.optimizeCrit.perfGainedGrav2Criteria =
           criteria.perfGainedGrav2Criteria;
+        state.optimizeCrit.hasGravitonPerfGainCriteria =
+          criteria.hasGravitonPerfGainCriteria;
         state.optimizeCrit.isMaximizeCpuUtilCriteria =
           criteria.isMaximizeCpuUtilCriteria;
         state.optimizeCrit.isMaximizeMemUtilCriteria =

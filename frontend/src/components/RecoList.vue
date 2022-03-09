@@ -19,25 +19,34 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
     </div>
     <div class="row mt-2">
       <p class="h2prompt">
-        Review the table below for the recommended EC2 instance(s) for EC2
+        Review the table below for the recommended EC2 instance type(s) for
         compute fleet tagged '{{ this.fleetId }}'
       </p>
     </div>
     <div v-if="loading" class="loader" />
     <br />
+
     <div v-if="!loading">
-      <div v-for="item in overProvInstanceDetails" :key="item">
-        {{ item.name }}:
-        <span style="font-color: #add8e6">{{ item.value }}</span>
-      </div>
-      <br />
+      <p class="h3prompt">Recommendations and cost difference</p>
       <v-data-table
-        :headers="headers"
-        :items="instances"
+        :headers="recommendationHeaders"
+        :items="recoInstances"
         item-key="recoInstanceType"
         hide-default-footer
         class="elevation-1"
       />
+
+      <br />
+      <br />
+      <p class="h3prompt">Current Fleet instance type and cost</p>
+      <v-data-table
+        :headers="headers"
+        :items="instances"
+        item-key="overProvInstanceType"
+        hide-default-footer
+        class="elevation-1"
+      />
+
       <!--table class="table table-striped table-hover mt-2"-->
     </div>
   </div>
@@ -50,7 +59,37 @@ export default {
 
   data() {
     return {
+      fleetId: null,
       headers: [
+        {
+          text: 'Current Instance Type',
+          value: 'overProvInstanceType',
+          width: '12%',
+        },
+        {
+          text: 'Monthly Cost',
+          value: 'currentTotalMonthlyCost',
+          width: '12%',
+        },
+        {
+          text: 'Total # Instances',
+          value: 'currentTotalInstances',
+          width: '',
+        },
+        { text: 'Total vCPU', value: 'currentTotalVcpus', width: '' },
+        { text: 'Total Memory', value: 'currentTotalMem', width: '' },
+        {
+          text: 'Fleet CPU Utilization',
+          value: 'fleetAvgCpuUtil',
+          width: '',
+        },
+        {
+          text: 'Fleet Memory Utilization',
+          value: 'fleetAvgMemUtil',
+          width: '',
+        },
+      ],
+      recommendationHeaders: [
         {
           text: 'Recommended Instance Type',
           value: 'recoInstanceType',
@@ -67,6 +106,7 @@ export default {
           width: '12%',
         },
         { text: 'Cost Difference', value: 'recoPriceDiff', width: '' },
+        { text: 'Performance Risk', value: 'recoPerfRisk', width: '' },
         { text: 'Total # Instances', value: 'recoTotalInstances', width: '' },
         { text: 'Total vCPU', value: 'recoTotalVcpus', width: '' },
         { text: 'Total Memory', value: 'recoTotalMem', width: '' },
@@ -80,10 +120,12 @@ export default {
           value: 'recoProjectedMaxMemUtil',
           width: '',
         },
-        { text: 'Performance Risk', value: 'recoPerfRisk', width: '' },
       ],
       overProvInstanceDetails: [],
       instances: [],
+      recoInstances: [],
+      fleetAvgCpuUtil: 0,
+      fleetMemCpuUtil: 0,
       loading: false,
     };
   },
@@ -91,7 +133,10 @@ export default {
     console.log('In created');
     this.loading = true;
 
-    this.fleetId = AmplifyStore.state.overProvEc2.fleetId;
+    this.fleetId = AmplifyStore.state.overProvFleet.fleetId;
+    this.fleetAvgCpuUtil = AmplifyStore.state.overProvFleet.fleetAvgCpuUtil;
+    this.fleetAvgMemUtil = AmplifyStore.state.overProvFleet.fleetAvgMemUtil;
+
     this.postData();
   },
   methods: {
@@ -107,16 +152,15 @@ export default {
       console.log(AmplifyStore.state.optimizeCrit);
 
       var postData = {
+        requestType: 'optimizeComputeFleet',
         s3BucketName: AmplifyStore.state.computeOptReport.s3Bucket,
         s3KeyName: AmplifyStore.state.computeOptReport.s3ObjKey,
-        requestType: 'optimizeComputeFleet',
-        overProvInstanceType: AmplifyStore.state.overProvEc2.instanceType,
-        overProvInstanceArn: AmplifyStore.state.overProvEc2.instanceArn,
-        overProvInstanceName: AmplifyStore.state.overProvEc2.instanceName,
-        overProvInstanceCount:
-          AmplifyStore.state.overProvEc2.instanceTotalFleetInstCnt,
+        tag: this.fleetId,
+        fleetInstanceType: AmplifyStore.state.overProvFleet.fleetInstanceType,
         maxCpuUtilCriteria: AmplifyStore.state.optimizeCrit.maxCpuUtilCriteria,
         maxMemUtilCriteria: AmplifyStore.state.optimizeCrit.maxMemUtilCriteria,
+        hasGravitonPerfGainCriteria:
+          AmplifyStore.state.optimizeCrit.hasGravitonPerfGainCriteria,
         perfGainedGrav2Criteria:
           AmplifyStore.state.optimizeCrit.perfGainedGrav2Criteria,
         isMaximizeCpuUtilCrit:
@@ -127,11 +171,14 @@ export default {
       var pathParams = {};
       var method = 'POST';
       var additionalParams = {};
-      console.debug(AmplifyStore.state.sessionCtx, this.$apiPath);
+      console.debug(
+        AmplifyStore.state.sessionCtx,
+        this.$pricePerfOptimizeApiPath
+      );
       AmplifyStore.state.sessionCtx.apigClient
         .invokeApi(
           pathParams,
-          this.$apiPath,
+          this.$pricePerfOptimizeApiPath,
           method,
           additionalParams,
           postData
@@ -140,41 +187,31 @@ export default {
           console.log('RESPONSE RECEIVED: ', res);
           // handle success
           this.loading = false;
-          for (let i in res.data) {
-            if (i == 0) {
-              this.populateOverProvInstanceDetails(
-                'CPU Util % value used for current fleet',
-                res.data[i]['cpuUtilization']
-              );
-              this.populateOverProvInstanceDetails(
-                'Memory Util % value used for current fleet',
-                res.data[i]['memUtilization']
-              );
-              this.populateOverProvInstanceDetails(
-                'Current fleet EC2 instance type',
-                res.data[i]['overProvInstanceType']
-              );
-              this.populateOverProvInstanceDetails(
-                'Current fleet total vCPU',
-                res.data[i]['currentTotalVcpus']
-              );
-              this.populateOverProvInstanceDetails(
-                'Current fleet total memory',
-                res.data[i]['currentTotalMem']
-              );
-              this.populateOverProvInstanceDetails(
-                'Current fleet total # EC2 instances',
-                res.data[i]['currentTotalInstances']
-              );
-              this.populateOverProvInstanceDetails(
-                'Current fleet Monthly Cost',
-                res.data[i]['currentTotalMonthlyCost']
-              );
-            }
 
-            // populate the table row here
-            this.instances = res.data[i]['recos'];
-          }
+          var currentFleetData = {};
+
+          currentFleetData['fleetAvgCpuUtil'] = this.fleetAvgCpuUtil + '%';
+
+          currentFleetData['fleetAvgMemUtil'] = this.fleetAvgMemUtil + '%';
+
+          currentFleetData['overProvInstanceType'] =
+            res.data['overProvInstanceType'];
+
+          currentFleetData['currentTotalVcpus'] = res.data['currentTotalVcpus'];
+
+          currentFleetData['currentTotalMem'] = res.data['currentTotalMem'];
+
+          currentFleetData['currentTotalInstances'] =
+            res.data['currentTotalInstances'];
+
+          currentFleetData['currentTotalMonthlyCost'] =
+            res.data['currentTotalMonthlyCost'];
+
+          this.instances = [];
+          this.instances.push(currentFleetData);
+          // populate the table row here
+          this.recoInstances = res.data['recos'];
+
           console.log('Populated table', res.data);
         })
         .catch((err) => {

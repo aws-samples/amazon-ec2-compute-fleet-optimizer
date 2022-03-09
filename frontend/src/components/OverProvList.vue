@@ -90,6 +90,10 @@ export default {
       selectedEc2.selectedInstanceTotalFleetInstCnt =
         this.selected[0].totalFleetInstCnt;
       selectedEc2.fleetId = this.selected[0].tag;
+      selectedEc2.selectedHasMemUtilMetric =
+        this.selected[0].memUtilization == 'not available' ? false : true;
+      selectedEc2.selectedInstanceCpuUtil = this.selected[0].cpuUtilization;
+      selectedEc2.selectedInstanceMemUtil = this.selected[0].memUtilization;
 
       AmplifyStore.commit('setOverProvEc2', selectedEc2);
 

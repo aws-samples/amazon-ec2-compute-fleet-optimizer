@@ -18,12 +18,15 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
       <p class="h1title">Fleet Optimizer with Graviton</p>
     </div>
     <div class="row mt-2">
-      <p class="h2prompt">
-        Select a compute fleet below and hit Next. These fleets contain one or
-        more over-provisioned EC2 instances, as identified in the export file
-        from AWS Compute Optimizer. We'll attempt to optimize the compute
-        instances in this fleet in the next step.
-      </p>
+      <div class="col-md-12">
+        <p class="h2prompt">
+          The table shows data synthesized from the uploaded Compute Optimizer
+          report. Take a look at the key attributes of your compute fleets,
+          especially the EC2 instance type, average CPU and Memory utilization,
+          based on which you can decide which fleet to choose for optimization.
+        </p>
+        <p class="h2prompt">Select a compute fleet below and hit Next.</p>
+      </div>
     </div>
     <div v-if="loading" class="loader"></div>
     <br />
@@ -33,7 +36,7 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
           v-model="selected"
           :headers="headers"
           :items="fleetTblData"
-          item-key="tag"
+          item-key="tblKey"
           class="elevation-1"
           :single-select="true"
           show-select
@@ -53,6 +56,7 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
 </template>
 <script>
 import AmplifyStore from '../store/store';
+import config from '../aws-exports';
 
 export default {
   name: 'overprovfleets',
@@ -63,18 +67,29 @@ export default {
       headers: [
         { text: 'Fleet Id', value: 'tag', width: '' },
         {
+          text: 'EC2 Instance Type',
+          value: 'overProvInstanceType',
+          width: '',
+        },
+        { text: 'Total Fleet Size', value: 'totalFleetInstCnt', width: '' },
+        {
           text: 'Avg. Fleet CPU Utilization',
           value: 'avgFleetVCpuUtil',
           width: '',
         },
-        { text: 'Total Fleet Size', value: 'totalFleetInstCnt', width: '' },
+        {
+          text: 'Avg. Fleet Memory Utilization',
+          value: 'avgFleetMemUtil',
+          width: '',
+        },
       ],
-      fleetData: {},
       fleetTblData: [],
       errorText: null,
       isServerRespEmpty: false,
       isFleetTagMissing: false,
       loading: false,
+      s3BucketName: `${config.aws_user_files_s3_bucket}`,
+      s3ObjectKey: '',
     };
   },
   async created() {
@@ -82,22 +97,101 @@ export default {
 
     this.loading = true;
 
-    this.postData();
+    this.uploadImage();
   },
   methods: {
     processSubmit() {
       var overProvFleet = {};
       overProvFleet.fleetId = this.selected[0].tag;
-      overProvFleet.fleetInstances = this.fleetData[this.selected[0].tag];
+      overProvFleet.fleetInstanceType = this.selected[0].overProvInstanceType;
+      overProvFleet.fleetAvgCpuUtil = this.selected[0].avgFleetVCpuUtil.split(
+        ' ',
+        1
+      )[0];
+      let hasAvgFleetMemUtil = this.selected[0].hasAvgFleetMemUtil;
+      overProvFleet.hasAvgFleetMemUtil = hasAvgFleetMemUtil;
+
+      if (hasAvgFleetMemUtil)
+        overProvFleet.fleetAvgMemUtil = this.selected[0].avgFleetMemUtil.split(
+          ' ',
+          1
+        )[0];
+      else overProvFleet.fleetAvgMemUtil = this.selected[0].avgFleetMemUtil;
 
       AmplifyStore.commit('setOverProvFleet', overProvFleet);
 
       this.$router.push({
-        path: 'overprovinstances',
+        path: 'optimizecriteria',
       });
+    },
+    uploadImage: async function () {
+      console.log('uploading file..........');
+      console.log('Uploading: ', AmplifyStore.state.computeOptReport.image);
+
+      var pathParams = {};
+      var method = 'GET';
+      var additionalParams = {};
+      console.debug(AmplifyStore.state.sessionCtx);
+      console.log('Get upoad urlpath ..........');
+
+      console.log(this.$getUploadUrlApiPath);
+
+      var response;
+      try {
+        response = await AmplifyStore.state.sessionCtx.apigClient.invokeApi(
+          pathParams,
+          this.$getUploadUrlApiPath,
+          method,
+          additionalParams
+        );
+
+        console.log('Response: ', response.data);
+
+        if (!response.data.uploadURL) {
+          this.isServerRespEmpty = true;
+          this.errorText =
+            "The provided EC2 recommendations from Compute Optimizer doesn't have any EC2 instance \
+              record that is marked as Over-Provisioned. This tool currently supports optimizing for \
+              just Over-Provisioned EC2 instances.";
+
+          return;
+        }
+
+        let binary = atob(
+          AmplifyStore.state.computeOptReport.image.split(',')[1]
+        );
+        let array = [];
+        for (var i = 0; i < binary.length; i++) {
+          array.push(binary.charCodeAt(i));
+        }
+        let blobData = new Blob([new Uint8Array(array)], {
+          type: 'text/csv',
+        });
+        console.log('Uploading to: ', response.data.uploadURL);
+        const result = await fetch(response.data.uploadURL, {
+          method: 'PUT',
+          body: blobData,
+        });
+        console.log('File upload to S3 Result: ', result);
+        // Final URL for the user doesn't need the query string params
+        this.uploadURL = response.data.uploadURL.split('?')[0];
+        this.s3ObjectKey = response.data.photoFilename;
+        // handle success
+        this.postData();
+      } catch (err) {
+        console.error('Error in request handling: ', err);
+        this.loading = false;
+        this.errorText = 'Server returned an error: ' + err.message;
+      }
     },
     async postData() {
       console.log(AmplifyStore.state.computeOptReport);
+      var computeOptReport = {};
+      computeOptReport.image = AmplifyStore.state.computeOptReport.image;
+      computeOptReport.s3Bucket = this.s3BucketName;
+      computeOptReport.s3ObjKey = this.s3ObjectKey;
+
+      AmplifyStore.commit('setComputeOptReport', computeOptReport);
 
       var postData = {
         s3BucketName: AmplifyStore.state.computeOptReport.s3Bucket,
@@ -111,7 +205,7 @@ export default {
       AmplifyStore.state.sessionCtx.apigClient
         .invokeApi(
           pathParams,
-          this.$apiPath,
+          this.$pricePerfOptimizeApiPath,
           method,
           additionalParams,
           postData
@@ -121,11 +215,10 @@ export default {
           // handle success
           this.loading = false;
 
-          var fleetData = {};
           var tableData = [];
           var fleetIdx = 0;
 
-          if (res.data.length == 0) {
+          if (res.data == null) {
             this.isServerRespEmpty = true;
             this.errorText =
               "The provided EC2 recommendations from Compute Optimizer doesn't have any EC2 instance \
@@ -134,41 +227,50 @@ export default {
 
             return;
           }
-          for (let i in res.data) {
-            var tag = res.data[i]['tag'];
-            var avgFleetVcpuUtil = res.data[i]['avgFleetVCpuUtil'];
 
-            if (tag == '' || avgFleetVcpuUtil == 'not available') {
-              continue;
-            }
-            var fleetInstances = fleetData[tag];
-            if (fleetInstances == null) {
-              fleetInstances = [];
-              fleetData[tag] = fleetInstances;
+          for (var fleetTag in res.data) {
+            var instanceTypes = res.data[fleetTag];
+            for (var instanceType in instanceTypes) {
+              var fleetData = instanceTypes[instanceType];
 
               var fleetSummary = {};
-              fleetSummary['tag'] = res.data[i]['tag'];
-              fleetSummary['avgFleetVCpuUtil'] =
-                res.data[i]['avgFleetVCpuUtil'];
+
+              fleetSummary['tblKey'] = fleetTag + '-' + instanceType;
+              fleetSummary['tag'] = fleetTag;
+              fleetSummary['overProvInstanceType'] = instanceType;
               fleetSummary['totalFleetInstCnt'] =
-                res.data[i]['totalFleetInstCnt'];
+                fleetData['totalFleetInstCnt'];
+
+              fleetSummary['avgFleetVCpuUtil'] =
+                parseFloat(fleetData['avgFleetVCpuUtil']).toFixed(2) + ' %';
+
+              var hasAvgFleetMemUtil = fleetData['hasAvgFleetMemUtil'];
+
+              fleetSummary['hasAvgFleetMemUtil'] = hasAvgFleetMemUtil;
+
+              var fleetAvgMemUtil = hasAvgFleetMemUtil
+                ? parseFloat(fleetData['avgFleetMemUtil']).toFixed(2) + ' %'
+                : 'not available';
+              fleetSummary['avgFleetMemUtil'] = fleetAvgMemUtil;
 
               tableData[fleetIdx] = fleetSummary;
+
               fleetIdx++;
             }
-
-            fleetInstances.push(res.data[i]);
           }
 
           if (tableData.length == 0) {
             this.isFleetTagMissing = true;
             this.errorText =
-              "The provided EC2 recommendations from Compute Optimizer doesn't have any EC2 instance record that is tagged with its fleet id. Please try again after ensuring the ec2 instances in there are tagged with the corresponding fleet/workload id !!";
+              "The provided EC2 recommendations from Compute Optimizer doesn't \
+              have any EC2 instance record that is tagged with its fleet id. \
+              Please try again after ensuring the ec2 instances in there are tagged \
+              with the corresponding fleet/workload id !!";
+
             return;
           }
 
           this.fleetTblData = tableData;
-          this.fleetData = fleetData;
         })
         .catch((err) => {
           console.error('Error in request handling: ', err);

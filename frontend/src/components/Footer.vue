@@ -16,9 +16,19 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
   <footer>
     <div class="row mt-2">
       <div class="col-md-12 text-center">
-        <small class="text-muted"> Copyright 2022, Amazon Web Services. </small>
-        <small class="text-muted">Support email: vijoy@amazon.com</small>
+        <p class="text-muted p">Copyright 2022, Amazon Web Services.</p>
+        <p class="text-muted p">support: vijoy@amazon.com</p>
       </div>
     </div>
   </footer>
 </template>
+
+<style scoped>
+.p {
+  font-size: small;
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+</style>

@@ -23,7 +23,6 @@ import AmplifyStore from './store/store';
 import AuthComponent from './components/Auth';
 import Ec2COReportUpload from './components/Ec2COReportUpload';
 import OverProvFleets from './components/OverProvFleets';
-import OverProvList from './components/OverProvList';
 import OptimizeCriteria from './components/OptimizeCriteria';
 import RecoList from './components/RecoList';
 
@@ -33,11 +32,6 @@ const routes = [
   {
     path: '/overprovfleets',
     component: OverProvFleets,
-    meta: { requiresAuth: true },
-  },
-  {
-    path: '/overprovinstances',
-    component: OverProvList,
     meta: { requiresAuth: true },
   },
   {
