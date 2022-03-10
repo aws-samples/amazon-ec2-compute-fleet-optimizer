@@ -18,7 +18,20 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
       <p class="h1title">Fleet Optimizer with Graviton</p>
     </div>
     <div class="row mt-2">
-      <p class="h2prompt">Enter your fleet optimization criteria</p>
+      <div class="col-md-12">
+        <p class="h2prompt">
+          Before proceeding to obtain Graviton2 based EC2 instance
+          recommendation for your fleet, you should consider below mentioned
+          additional levers in order to maximize your cost savings.
+        </p>
+        <p class="h2prompt">
+          Although making a selection below is optional, we strongly encourage
+          that you do the due diligence in estimating the potential performance
+          gains with Graviton for your workload and also whether your workload
+          can run with higher level of CPU/Memory utilization than its current
+          level.
+        </p>
+      </div>
     </div>
     <div class="form-group">
       <v-container>
@@ -238,4 +251,3 @@ export default {
   },
 };
 </script>
-
