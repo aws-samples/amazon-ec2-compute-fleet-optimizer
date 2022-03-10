@@ -21,9 +21,7 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
       <div class="col-md-12">
         <p class="h2prompt">
           The table shows data synthesized from the uploaded Compute Optimizer
-          report. Take a look at the key attributes of your compute fleets,
-          especially the EC2 instance type, average CPU and Memory utilization,
-          based on which you can decide which fleet to choose for optimization.
+          report.
         </p>
         <p class="h2prompt">Select a compute fleet below and hit Next.</p>
       </div>
@@ -40,6 +38,9 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
           class="elevation-1"
           :single-select="true"
           show-select
+          :sort-by="['totalFleetInstCnt', 'avgFleetVCpuUtil']"
+          :sort-desc="[true, false]"
+          multi-sort
         />
         <div id="form-response"></div>
         <button
@@ -73,12 +74,12 @@ export default {
         },
         { text: 'Total Fleet Size', value: 'totalFleetInstCnt', width: '' },
         {
-          text: 'Avg. Fleet CPU Utilization',
+          text: 'Avg. Fleet CPU Utilization (%)',
           value: 'avgFleetVCpuUtil',
           width: '',
         },
         {
-          text: 'Avg. Fleet Memory Utilization',
+          text: 'Avg. Fleet Memory Utilization (%)',
           value: 'avgFleetMemUtil',
           width: '',
         },
@@ -102,21 +103,12 @@ export default {
   methods: {
     processSubmit() {
       var overProvFleet = {};
+
       overProvFleet.fleetId = this.selected[0].tag;
       overProvFleet.fleetInstanceType = this.selected[0].overProvInstanceType;
-      overProvFleet.fleetAvgCpuUtil = this.selected[0].avgFleetVCpuUtil.split(
-        ' ',
-        1
-      )[0];
-      let hasAvgFleetMemUtil = this.selected[0].hasAvgFleetMemUtil;
-      overProvFleet.hasAvgFleetMemUtil = hasAvgFleetMemUtil;
-
-      if (hasAvgFleetMemUtil)
-        overProvFleet.fleetAvgMemUtil = this.selected[0].avgFleetMemUtil.split(
-          ' ',
-          1
-        )[0];
-      else overProvFleet.fleetAvgMemUtil = this.selected[0].avgFleetMemUtil;
+      overProvFleet.fleetAvgCpuUtil = this.selected[0].avgFleetVCpuUtil;
+      overProvFleet.hasAvgFleetMemUtil = this.selected[0].hasAvgFleetMemUtil;
+      overProvFleet.fleetAvgMemUtil = this.selected[0].avgFleetMemUtil;
 
       AmplifyStore.commit('setOverProvFleet', overProvFleet);
 
@@ -125,16 +117,12 @@ export default {
       });
     },
     uploadImage: async function () {
-      console.log('uploading file..........');
-      console.log('Uploading: ', AmplifyStore.state.computeOptReport.image);
+      console.debug('Uploading: ', AmplifyStore.state.computeOptReport.image);
 
       var pathParams = {};
       var method = 'GET';
       var additionalParams = {};
-      console.debug(AmplifyStore.state.sessionCtx);
-      console.log('Get upoad urlpath ..........');
-
-      console.log(this.$getUploadUrlApiPath);
+      console.debug(AmplifyStore.state.sessionCtx, this.$getUploadUrlApiPath);
 
       var response;
       try {
@@ -241,15 +229,16 @@ export default {
               fleetSummary['totalFleetInstCnt'] =
                 fleetData['totalFleetInstCnt'];
 
-              fleetSummary['avgFleetVCpuUtil'] =
-                parseFloat(fleetData['avgFleetVCpuUtil']).toFixed(2) + ' %';
+              fleetSummary['avgFleetVCpuUtil'] = parseFloat(
+                fleetData['avgFleetVCpuUtil'].toFixed(2)
+              );
 
               var hasAvgFleetMemUtil = fleetData['hasAvgFleetMemUtil'];
 
               fleetSummary['hasAvgFleetMemUtil'] = hasAvgFleetMemUtil;
 
               var fleetAvgMemUtil = hasAvgFleetMemUtil
-                ? parseFloat(fleetData['avgFleetMemUtil']).toFixed(2) + ' %'
+                ? parseFloat(fleetData['avgFleetMemUtil'].toFixed(2))
                 : 'not available';
               fleetSummary['avgFleetMemUtil'] = fleetAvgMemUtil;
 
