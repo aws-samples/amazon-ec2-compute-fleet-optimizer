@@ -18,10 +18,17 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
       <p class="h1title">Fleet Optimizer with Graviton</p>
     </div>
     <div class="row mt-2">
-      <p class="h2prompt">
-        Upload the exported CSV report from AWS Compute Optimizer containing
-        recommendations
-      </p>
+      <div class="col-md-12">
+        <p class="h2prompt">
+          Upload the exported CSV report from AWS Compute Optimizer containing
+          recommendations.
+        </p>
+        <p class="h2prompt">
+          NOTE: The EC2 instance entries in the CSV must be tagged with a fleet
+          name or identifier, in order to inform this tool which fleet it
+          belongs to. This data needs to be captured in a column named 'tag'.
+        </p>
+      </div>
     </div>
     <div class="row mt-2">
       <div class="form-group col-md-12">
