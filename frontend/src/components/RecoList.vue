@@ -20,7 +20,8 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
     <div class="row mt-2">
       <p class="h2prompt">
         Review the table below for the recommended EC2 instance type(s) for
-        compute fleet tagged '{{ this.fleetId }}'
+        compute fleet tagged '{{ this.fleetId }}' currently running on
+        {{ fleetInstanceType }} EC2 instance type.
       </p>
     </div>
     <div v-if="loading" class="loader" />
@@ -134,6 +135,7 @@ export default {
     this.loading = true;
 
     this.fleetId = AmplifyStore.state.overProvFleet.fleetId;
+    this.fleetInstanceType = AmplifyStore.state.overProvFleet.fleetInstanceType;
     this.fleetAvgCpuUtil = AmplifyStore.state.overProvFleet.fleetAvgCpuUtil;
     this.fleetAvgMemUtil = AmplifyStore.state.overProvFleet.fleetAvgMemUtil;
 
