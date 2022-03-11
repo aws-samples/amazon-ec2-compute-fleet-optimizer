@@ -167,12 +167,11 @@ Follow these steps:
 ? Provide a friendly name for your resource that will be used to label this category in the project: <YOUR-STORAGE-CATEGORY-NAME>
 ? Provide bucket name: <YOUR-BUCKET-NAME>
 ? Restrict access by: Individual Groups
-? Select groups: computeToolsUPG
-? What kind of access do you want for computeToolsUPG users: read
+? Select groups: No items were selected
 ? Do you want to add a Lambda Trigger for your S3 Bucket? (y/N) no
 ```
 
-## Adding a Lambda function
+## Adding the first Lambda function that computes the EC2 instance recommendations
 
 Run the below command to add a Lambda function to our Amplify app:
 
@@ -184,7 +183,7 @@ $ amplify add function
 Follow these steps:
 
 ? Select which capability you want to add: Lambda function (serverless function)
-? Provide an AWS Lambda function name: <YOUR-FUNCTION-CATEGORY-NAME>
+? Provide an AWS Lambda function name: pricePerfOptimize
 ? Choose the runtime that you want to use: Python
 Only one template found - using Hello World by default.
 
@@ -223,13 +222,69 @@ You can access the following resource attributes as environment variables from y
 
 ### Copy the source code for the lambda function 
 
-Execute the below copy command to copy the lambda function code from the repo you cloned to the folder created in above step. Look for the output that looks like this in the console output from running the previous step. 
-"Next steps:
-Check out sample function code generated in ```<project-dir>/amplify/backend/function/<YOUR-FUNCTION-CATEGORY-NAME>/src```
+Execute the below copy command to copy the lambda function code from the repo you cloned to the folder created in above step.
 
 ```bash
-$ cp <install-dir>/backend/function/*  <project-dir>/amplify/backend/function/<YOUR-FUNCTION-CATEGORY-NAME>/src/
+$ cp <install-dir>/backend/function/pricePerfOptimize/*  <project-dir>/amplify/backend/function/pricePerfOptimize/src/
 ```
+
+## Adding the second Lambda function that supports dishing out pre-signed url for uploading CSV to S3 bucket
+
+Run the below command to add the second Lambda function to our Amplify app:
+
+**NOTE:** _Make sure to enter S3_BUCKET_ENV_VAR_NAME verbatim when it prompts you for the environment variable name to pass to this lambda function. Similarly, for its value, enter this text ``` STORAGE_<YOUR-STORAGE-CATEGORY-NAME>_BUCKETNAME ``` after substituting the portion within angle bracket with the storage category name you chose in the previous step. Failing to do so will end up in errors when you eventually use the tool._
+
+```bash
+$ amplify add function
+
+Follow these steps:
+
+? Select which capability you want to add: Lambda function (serverless function)
+? Provide an AWS Lambda function name: getUploadUrl
+? Choose the runtime that you want to use: NodeJS
+? Choose the function template that you want to use: Hello World
+
+Available advanced settings:
+- Resource access permissions
+- Scheduled recurring invocation
+- Lambda layers configuration
+- Environment variables configuration
+- Secret values configuration
+
+? Do you want to configure advanced settings? Yes
+? Do you want to access other resources in this project from your Lambda function? Yes
+? Select the categories you want this function to have access to: storage
+? Select the operations you want to permit on <YOUR-STORAGE-CATEGORY-NAME> : create, read, update, delete
+
+You can access the following resource attributes as environment variables from your Lambda function
+	ENV
+	REGION
+	STORAGE_<YOUR-STORAGE-CATEGORY-NAME>_BUCKETNAME
+? Do you want to invoke this function on a recurring schedule? No
+? Do you want to enable Lambda layers for this function? No
+? Do you want to configure environment variables for this function? Yes
+? Enter the environment variable name: S3_BUCKET_ENV_VAR_NAME
+? Enter the environment variable value: STORAGE_<YOUR-STORAGE-CATEGORY-NAME>_BUCKETNAME
+? Select what you want to do with environment variables: I am done
+
+You can access the following resource attributes as environment variables from your Lambda function
+	ENV
+	REGION
+	STORAGE_<YOUR-STORAGE-CATEGORY-NAME>_BUCKETNAME
+	S3_BUCKET_ENV_VAR_NAME
+? Do you want to configure secret values this function can access? No
+? Do you want to edit the local lambda function now? (Y/n) n
+
+```
+
+### Copy the source code for the lambda function 
+
+Execute the below copy command to copy the lambda function code from the repo you cloned to the folder created in above step. 
+
+```bash
+$ cp <install-dir>/backend/function/getUploadUrl/*  <project-dir>/amplify/backend/function/getUploadUrl/src/
+```
+
 
 ## Adding a REST API
 
@@ -248,11 +303,19 @@ Follow these steps:
 
 ```bash
 ? Choose a Lambda source: Use a Lambda function already added in the current Amplify project
-  Only one option for [Choose the Lambda function to invoke by this path]. Selecting [<YOUR-FUNCTION-CATEGORY-NAME>].
+? Choose the Lambda function to invoke by this path: pricePerfOptimize.
 ? Restrict API access? (Y/n) yes
 ? Restrict access by: Individual Groups
   Must pick at least 1 of 1 options. Selecting all options [computeToolsUPG]
-? What permissions do you want to grant to computeToolsUPG users: create, read, update
+? What permissions do you want to grant to computeToolsUPG users: create, update
+? Do you want to add another path? (y/N) · yes
+? Provide a path (e.g., /book/{isbn}): · /get-upload-url
+? Choose a Lambda source · Use a Lambda function already added in the current Amplify project
+? Choose the Lambda function to invoke by this path: getUploadUrl
+? Restrict API access? (Y/n) yes
+? Restrict access by: Individual Groups
+  Must pick at least 1 of 1 options. Selecting all options [computeToolsUPG]
+? What permissions do you want to grant to computeToolsUPG users? read
 ? Do you want to add another path? (y/N) no
 ```
 
@@ -293,6 +356,27 @@ $ amplify publish
 ├──────────┼─────────────────────────────────┼───────────┼───────────────────┤
 │ Hosting  │ amplifyhosting                  │ Create    │ awscloudformation │
 └──────────┴─────────────────────────────────┴───────────┴───────────────────┘
+
+    
+┌──────────┬───────────────────┬───────────┬───────────────────┐
+│ Category │ Resource name     │ Operation │ Provider plugin   │
+├──────────┼───────────────────┼───────────┼───────────────────┤
+│ Auth     │ userPoolGroups    │ Create    │ awscloudformation │
+├──────────┼───────────────────┼───────────┼───────────────────┤
+│ Auth     │ fleetoptimizera   │ Create    │ awscloudformation │
+├──────────┼───────────────────┼───────────┼───────────────────┤
+│ Storage  │ fleetoptimizera   │ Create    │ awscloudformation │
+├──────────┼───────────────────┼───────────┼───────────────────┤
+│ Function │ pricePerfOptimize │ Create    │ awscloudformation │
+├──────────┼───────────────────┼───────────┼───────────────────┤
+│ Function │ getUploadUrl      │ Create    │ awscloudformation │
+├──────────┼───────────────────┼───────────┼───────────────────┤
+│ Api      │ fleetoptimizera   │ Create    │ awscloudformation │
+├──────────┼───────────────────┼───────────┼───────────────────┤
+│ Hosting  │ amplifyhosting    │ Create    │ awscloudformation │
+└──────────┴───────────────────┴───────────┴───────────────────┘
+? Are you sure you want to continue? (Y/n) 
+
 ? Are you sure you want to continue? Yes
 ...
 ...
