@@ -28,7 +28,7 @@ logger = logging.getLogger()
 LOGLEVEL = os.environ.get('LOGLEVEL', 'WARN').upper()
 logger.setLevel(LOGLEVEL)
 
-s3BucketEnvVar = os.environ['COMPUTEOPTIMIZER_CSV_REPORT_BUCKET']
+s3BucketEnvVar = os.environ['S3_BUCKET_ENV_VAR_NAME']
 s3Bucket = os.environ[s3BucketEnvVar]
 
 
