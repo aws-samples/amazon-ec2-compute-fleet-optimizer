@@ -443,29 +443,24 @@ https://dev.<YOUR-AMPLIFY-APP-PROJECT-NAME>.amplifyapp.com
 
 You'll need to a CSV report generated from AWS Compute Optimizer with its recommendations for EC2 instance type. Make sure to have selected the CPU architecture preference as 'Graviton (aws-arm64)' prior to generating the recommendation report from Compute Optimizer.
 
-In the console, navigate to 'File Storage' tab, click 'View in S3' button to access the S3 bucket configured above. Upload the CSV file into this bucket.
+Drag your CSV file into the dotted box or click within the box to browse for the CSV file, to allow the optimizer tool to synthesize the data within the Compute Optimizer generated CSV file.
 
-![Sign-In](./screens/s3ObjectKey-input-page.png)
+![Sign-In](./screens/uploadCOReport.png)
 
 
 #### Choose a compute fleet to optimize
 
-![Sign-In](./screens/computeFleet-selection-page.png)
-
-
-#### Choose a EC2 instance with CPU Utilization closely matching that of the fleet'sample
-
-![Sign-In](./screens/ec2Instance-selection-page.png)
+![Sign-In](./screens/currentUtilizationByFleet.png)
 
 
 #### Provide the criteria for optimizing compute
 
-![Sign-In](./screens/optimizeCriteria-page.png)
+![Sign-In](./screens/selectOptimizationCriteria.png)
 
 
 #### Review the fleet optimization recommendations
 
-![Sign-In](./screens/optimizerResults-page.png)
+![Sign-In](./screens/optimizerResult.png)
 
 
 ## Cleanup
