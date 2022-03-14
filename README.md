@@ -434,7 +434,7 @@ https://dev.<YOUR-AMPLIFY-APP-PROJECT-NAME>.amplifyapp.com
 
 #### Sign-In step
 
-![Sign-In](./screens/signIn-page.png)
+![Sign-In](./screens/signInPage.png)
 
 
 
@@ -445,22 +445,22 @@ You'll need to a CSV report generated from AWS Compute Optimizer with its recomm
 
 Drag your CSV file into the dotted box or click within the box to browse for the CSV file, to allow the optimizer tool to synthesize the data within the Compute Optimizer generated CSV file.
 
-![Sign-In](./screens/uploadCOReport.png)
+![uploadCOReport](./screens/uploadCOReport.png)
 
 
 #### Choose a compute fleet to optimize
 
-![Sign-In](./screens/currentUtilizationByFleet.png)
+![currentUtilOfFleets](./screens/currentUtilizationByFleet.png)
 
 
 #### Provide the criteria for optimizing compute
 
-![Sign-In](./screens/selectOptimizationCriteria.png)
+![selectOptCriteria](./screens/selectOptimizationCriteria.png)
 
 
 #### Review the fleet optimization recommendations
 
-![Sign-In](./screens/optimizerResult.png)
+![optimizerResult](./screens/optimizerResult.png)
 
 
 ## Cleanup
