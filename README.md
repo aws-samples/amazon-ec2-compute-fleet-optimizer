@@ -414,7 +414,6 @@ $ aws cognito-idp admin-add-user-to-group --user-pool-id <YOUR-USER-POOL-ID> --u
 
 ### Upload a AWS Compute Optimizer generated CSV file to the S3 bucket
 
-You'll need to a CSV report generated from AWS Compute Optimizer with its recommendations for EC2 instance type. Make sure to have selected the CPU architecture preference as 'Graviton (aws-arm64)' prior to generating the recommendation report from Compute Optimizer.
 
 Once you have the CSV file, proceed to the next step to launch the amplify console.
 
@@ -439,7 +438,12 @@ https://dev.<YOUR-AMPLIFY-APP-PROJECT-NAME>.amplifyapp.com
 
 
 
-#### Enter a S3 object key that corresponds to a CSV file with EC2 recommendations from AWS Compute Optimizer
+#### Upload CSV file with EC2 recommendations from AWS Compute Optimizer
+
+
+You'll need to a CSV report generated from AWS Compute Optimizer with its recommendations for EC2 instance type. Make sure to have selected the CPU architecture preference as 'Graviton (aws-arm64)' prior to generating the recommendation report from Compute Optimizer.
+
+In the console, navigate to 'File Storage' tab, click 'View in S3' button to access the S3 bucket configured above. Upload the CSV file into this bucket.
 
 ![Sign-In](./screens/s3ObjectKey-input-page.png)
 
