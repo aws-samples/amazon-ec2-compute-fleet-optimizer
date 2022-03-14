@@ -350,32 +350,14 @@ $ amplify publish
 ├──────────┼─────────────────────────────────┼───────────┼───────────────────┤
 │ Storage  │ <YOUR-STORAGE-CATEGORY-NAME>    │ Create    │ awscloudformation │
 ├──────────┼─────────────────────────────────┼───────────┼───────────────────┤
-│ Function │ <YOUR-FUNCTION-CATEGORY-NAME>   │ Create    │ awscloudformation │
+│ Function │ pricePerfOptimize               │ Create    │ awscloudformation │
+├──────────┼─────────────────────────────────┼───────────┼───────────────────┤
+│ Function │ getUploadUrl                    │ Create    │ awscloudformation │
 ├──────────┼─────────────────────────────────┼───────────┼───────────────────┤
 │ Api      │ <YOUR-API-CATEGORY-NAME>        │ Create    │ awscloudformation │
 ├──────────┼─────────────────────────────────┼───────────┼───────────────────┤
 │ Hosting  │ amplifyhosting                  │ Create    │ awscloudformation │
 └──────────┴─────────────────────────────────┴───────────┴───────────────────┘
-
-    
-┌──────────┬───────────────────┬───────────┬───────────────────┐
-│ Category │ Resource name     │ Operation │ Provider plugin   │
-├──────────┼───────────────────┼───────────┼───────────────────┤
-│ Auth     │ userPoolGroups    │ Create    │ awscloudformation │
-├──────────┼───────────────────┼───────────┼───────────────────┤
-│ Auth     │ fleetoptimizera   │ Create    │ awscloudformation │
-├──────────┼───────────────────┼───────────┼───────────────────┤
-│ Storage  │ fleetoptimizera   │ Create    │ awscloudformation │
-├──────────┼───────────────────┼───────────┼───────────────────┤
-│ Function │ pricePerfOptimize │ Create    │ awscloudformation │
-├──────────┼───────────────────┼───────────┼───────────────────┤
-│ Function │ getUploadUrl      │ Create    │ awscloudformation │
-├──────────┼───────────────────┼───────────┼───────────────────┤
-│ Api      │ fleetoptimizera   │ Create    │ awscloudformation │
-├──────────┼───────────────────┼───────────┼───────────────────┤
-│ Hosting  │ amplifyhosting    │ Create    │ awscloudformation │
-└──────────┴───────────────────┴───────────┴───────────────────┘
-? Are you sure you want to continue? (Y/n) 
 
 ? Are you sure you want to continue? Yes
 ...
